@@ -72,6 +72,6 @@ def activate_email(request , email_token):
         user = Profile.objects.get(email_token= email_token)
         user.is_email_verified = True
         user.save()
-        return redirect('/')
+        return redirect('/accounts/login')
     except Exception as e:
         return HttpResponse('Invalid Email token')
