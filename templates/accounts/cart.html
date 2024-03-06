@@ -1,0 +1,133 @@
+{% extends "base/base.html" %}
+
+
+{% block start %}
+
+<section class="bg-light my-5">
+    <div class="container">
+      <div class="row">
+        <!-- cart -->
+        <div class="col-lg-9">
+          <div class="card border shadow-0">
+            <div class="m-4">
+              <h4 class="card-title mb-4">Your shopping cart </h4>
+              {% for cart_item in cart_items %}
+                {{cart_item.product}}
+              <div class="row gy-3 mb-4">
+                <div class="col-lg-5">
+                  <div class="me-lg-5">
+                    <div class="d-flex">
+                      <img src="/media/{{cart_item.product.product_images.first.image}}" class="border rounded me-3" style="width: 96px; height: 96px;" />
+                      <div class="">
+                        <a href="#" class="nav-link">{{cart_item.product.name}}</a>
+                        <p class="text-muted">Size --> {{cart_item.size_variant}}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-lg-2 col-sm-6 col-6 d-flex flex-row flex-lg-column flex-xl-row text-nowrap">
+                  <div class="">
+                    <select style="width: 100px;" class="form-select me-4">
+                      <option>1</option>
+                      <option>2</option>
+                      <option>3</option>
+                      <option>4</option>
+                    </select>
+                  </div>
+                  <div class="">
+                    <text class="h6">{{cart_item.get_product_price}}</text> <br />
+                    {% comment %} <small class="text-muted text-nowrap"> $460.00 / per item </small> {% endcomment %}
+                  </div>
+                </div>
+                <div class="col-lg col-sm-6 d-flex justify-content-sm-center justify-content-md-start justify-content-lg-center justify-content-xl-end mb-2">
+                  <div class="float-md-end">
+                    <a href="#!" class="btn btn-light border px-2 icon-hover-primary"><i class="fas fa-heart fa-lg px-1 text-secondary"></i></a>
+                    <a href="{% url 'remove_from_cart' cart_item.uid %}" class="btn btn-light border text-danger icon-hover-danger"> Remove</a>
+                  </div>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+  
+          </div>
+        </div>
+        <!-- cart -->
+        <!-- summary -->
+        <div class="col-lg-3">
+          <div class="card mb-3 border shadow-0">
+            <div class="card-body">
+              <form method="POST">
+                {% include 'base/alert.html' %}
+                {% csrf_token %}
+                <div class="form-group">
+                  <label class="form-label">Have coupon?</label>
+                  <div class="input-group">
+                    <input type="text" name="coupon" class="form-control border" placeholder="Coupon code" />
+                    <button type="submit" class="btn btn-light border">Apply</button>
+                  </div>
+                  {% if cart.coupon.coupon_code %}
+                  <div class="row m-2">
+                    <a href="{% url "remove_coupon" cart.uid %}" class="btn btn-success border">{{cart.coupon.coupon_code}}</a>
+                    {% comment %} <button  class="btn btn-success btn-outline"> Remove Coupon </button> {% endcomment %}
+                  </div>
+                  {% endif %}
+                </div>
+              </form>
+            </div>
+          </div>
+          <div class="card shadow-0 border">
+            <div class="card-body">
+              <div class="d-flex justify-content-between">
+                <p class="mb-2">Total price:</p>
+                <p class="mb-2">{{cart.get_cart_total}}</p>
+              </div>
+  
+              <div class="mt-3">
+                <button id="rzp-button1" href="#" class="btn btn-success w-100 shadow-0 mb-2"> Buy Now </button>
+                <a href="/" class="btn btn-light w-100 border mt-2"> Back to shop </a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- summary -->
+      </div>
+    </div>
+  </section>
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <script>
+    var options = {
+        "key": "rzp_test_6Yg6e0yH88tJqL", // Enter the Key ID generated from the Dashboard
+        "amount": "{{ payment.amount }}", // Amount is in currency subunits. Default currency is INR. Hence, 50000 refers to 50000 paise
+        "currency": "INR",
+        "name": "Ecomm",
+        "description": "Purchase",
+        "image": "https://example.com/your_logo",
+        "order_id": "{{payment.id}}", //This is a sample Order ID. Pass the `id` obtained in the response of Step 1
+        "handler": function (response){
+            window.location.href = `http://localhost:8000/accounts/success/?order_id={{payment.id}}`
+            {% comment %} alert(response.razorpay_payment_id);
+            alert(response.razorpay_order_id);
+            alert(response.razorpay_signature) {% endcomment %}
+        },
+        "theme": {
+            "color": "#3399cc"
+        }
+    };
+    var rzp1 = new Razorpay(options);
+    rzp1.on('payment.failed', function (response){
+            alert(response.error.code);
+            alert(response.error.description);
+            alert(response.error.source);
+            alert(response.error.step);
+            alert(response.error.reason);
+            alert(response.error.metadata.order_id);
+            alert(response.error.metadata.payment_id);
+    });
+    document.getElementById('rzp-button1').onclick = function(e){
+        rzp1.open();
+        e.preventDefault();
+    }
+    </script>
+
+
+{% endblock %}
